@@ -1,0 +1,23 @@
+{
+  "name": "sistema-expedientes-utn",
+  "version": "1.0.0",
+  "description": "Modulo de digitalización de expedientes estudiantiles de la Universidad Tecnologica de Nayarit",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dqnieldev/sistema-expedientes-utn.git"
+  },
+  "keywords": [],
+  "author": "dqnieldev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dqnieldev/sistema-expedientes-utn/issues"
+  },
+  "homepage": "https://github.com/dqnieldev/sistema-expedientes-utn#readme",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
