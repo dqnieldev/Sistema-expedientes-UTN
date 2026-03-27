@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  administrador
+  docente
+  alumno
+  personal_adm
+}
+
+enum EstatusAlumno {
+  activo
+  inactivo
+  egresado
+  baja
+}
+
+enum EstatusInscripcion {
+  activo
+  cancelado
+  aprobado
+  reprobado
+}
+
+enum ResultadoCalificacion {
+  aprobado
+  reprobado
+  sin_calificar
+}
+
+enum TipoRespaldo {
+  manual
+  automatico
+}
+
+model Usuario {
+  id            Int          @id @default(autoincrement())
+  nombre        String
+  apellido      String
+  email         String       @unique
+  passwordHash  String       @map("password_hash")
+  rol           Rol
+  activo        Boolean      @default(true)
+  createdAt     DateTime     @default(now()) @map("created_at")
+
+  alumno        Alumno?
+  docente       Docente?
+  personalAdm   PersonalAdm?
+  documentos    Documento[]  @relation("SubidoPor")
+  respaldos     Respaldo[]
+
+  @@map("usuarios")
+}
+
+model Alumno {
+  id           Int           @id @default(autoincrement())
+  usuarioId    Int           @unique @map("usuario_id")
+  matricula    String        @unique
+  carrera      String
+  cuatrimestre String
+  turno        String
+  fechaIngreso DateTime      @map("fecha_ingreso")
+  estatus      EstatusAlumno @default(activo)
+
+  usuario      Usuario       @relation(fields: [usuarioId], references: [id])
+  inscripciones Inscripcion[]
+  documentos   Documento[]
+
+  @@map("alumnos")
+}
+
+model Docente {
+  id          Int     @id @default(autoincrement())
+  usuarioId   Int     @unique @map("usuario_id")
+  numEmpleado String  @unique @map("num_empleado")
+  especialidad String
+  departamento String
+
+  usuario     Usuario @relation(fields: [usuarioId], references: [id])
+  inscripciones Inscripcion[]
+
+  @@map("docentes")
+}
+
+model PersonalAdm {
+  id          Int     @id @default(autoincrement())
+  usuarioId   Int     @unique @map("usuario_id")
+  numEmpleado String  @unique @map("num_empleado")
+  puesto      String
+  area        String
+
+  usuario     Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@map("personal_adm")
+}
+
+model Materia {
+  id           Int    @id @default(autoincrement())
+  clave        String @unique
+  nombre       String
+  creditos     Int
+  carrera      String
+  cuatrimestre Int
+
+  inscripciones Inscripcion[]
+
+  @@map("materias")
+}
+
+model Inscripcion {
+  id        Int                @id @default(autoincrement())
+  alumnoId  Int                @map("alumno_id")
+  materiaId Int                @map("materia_id")
+  docenteId Int                @map("docente_id")
+  periodo   String
+  estatus   EstatusInscripcion @default(activo)
+
+  alumno       Alumno       @relation(fields: [alumnoId], references: [id])
+  materia      Materia      @relation(fields: [materiaId], references: [id])
+  docente      Docente      @relation(fields: [docenteId], references: [id])
+  calificacion Calificacion?
+
+  @@map("inscripciones")
+}
+
+model Calificacion {
+  id            Int                   @id @default(autoincrement())
+  inscripcionId Int                   @unique @map("inscripcion_id")
+  parcial1      Decimal?
+  parcial2      Decimal?
+  parcial3      Decimal?
+  final         Decimal?
+  resultado     ResultadoCalificacion @default(sin_calificar)
+
+  inscripcion Inscripcion @relation(fields: [inscripcionId], references: [id])
+
+  @@map("calificaciones")
+}
+
+model Documento {
+  id           Int      @id @default(autoincrement())
+  alumnoId     Int      @map("alumno_id")
+  subidoPorId  Int      @map("subido_por")
+  tipoDoc      String   @map("tipo_doc")
+  nombreArchivo String  @map("nombre_archivo")
+  ruta         String
+  fechaSubida  DateTime @default(now()) @map("fecha_subida")
+  verificado   Boolean  @default(false)
+
+  alumno    Alumno  @relation(fields: [alumnoId], references: [id])
+  subidoPor Usuario @relation("SubidoPor", fields: [subidoPorId], references: [id])
+
+  @@map("documentos")
+}
+
+model Respaldo {
+  id            Int          @id @default(autoincrement())
+  realizadoPorId Int         @map("realizado_por")
+  nombreArchivo String       @map("nombre_archivo")
+  ruta          String
+  fecha         DateTime     @default(now())
+  tipo          TipoRespaldo
+  automatico    Boolean      @default(false)
+
+  realizadoPor Usuario @relation(fields: [realizadoPorId], references: [id])
+
+  @@map("respaldos")
+}
